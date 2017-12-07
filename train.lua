@@ -14,6 +14,10 @@ local optim = require 'optim'
 local M = {}
 local Trainer = torch.class('resnet.Trainer', M)
 
+-- Log results to files
+local trainLogger = optim.Logger(paths.concat('results', 'train.log'))
+local testLogger = optim.Logger(paths.concat('results', 'test.log'))
+
 function Trainer:__init(model, criterion, opt, optimState)
    self.model = model
    self.criterion = criterion
@@ -78,6 +82,10 @@ function Trainer:train(epoch, dataloader)
       timer:reset()
       dataTimer:reset()
    end
+   -- update logger/plot
+    trainLogger:add{['% mean class accuracy (train set)'] = 100.0 - top1Sum / N}
+    trainLogger:style{['% mean class accuracy (train set)'] = '-'}
+    trainLogger:plot()
 
    return top1Sum / N, top5Sum / N, lossSum / N
 end
@@ -119,6 +127,10 @@ function Trainer:test(epoch, dataloader)
 
    print((' * Finished epoch # %d     top1: %7.3f  top5: %7.3f\n'):format(
       epoch, top1Sum / N, top5Sum / N))
+   -- update log/plot
+   testLogger:add{['% mean class accuracy (test set)'] = 100.0 - top1Sum / N}
+   testLogger:style{['% mean class accuracy (test set)'] = '-'}
+   testLogger:plot()
 
    return top1Sum / N, top5Sum / N
 end
